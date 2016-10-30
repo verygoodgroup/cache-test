@@ -26,14 +26,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Set;
 
+import static cache.EhcacheJmxClient.getCityEvictions;
 import static cache.EhcacheJmxClient.getCityHits;
 import static cache.EhcacheJmxClient.getCityMisses;
+import static cache.EhcacheJmxClient.getCityPuts;
 import static cache.EhcacheJmxClient.getHotelHits;
 import static cache.EhcacheJmxClient.getHotelMisses;
 import static cache.ExpectedCacheStatistics.*;
 import static cache.ExpectedCacheStatistics.plusOneCityHits;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsNull.notNullValue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -79,12 +82,14 @@ public class CacheTests {
         City city = cityRepository.findOne(1L);
         assertThat(getCityHits(), is(sameCityHits()));
         assertThat(getCityMisses(), is(plusOneCityMisses()));
+        assertThat(getCityPuts(), is(plusOntCityPuts()));
 
         em.detach(city);
         city = cityRepository.findOne(1L);
 
         assertThat(getCityHits(), is(plusOneCityHits()));
         assertThat(getCityMisses(), is(sameCityMisses()));
+        assertThat(getCityPuts(), is(sameCityPuts()));
 
         em.detach(city);
         city = cityRepository.findOne(1L);
@@ -97,6 +102,7 @@ public class CacheTests {
 
         assertThat(getCityHits(), is(sameCityHits()));
         assertThat(getCityMisses(), is(plusOneCityMisses()));
+        assertThat(getCityPuts(), is(plusOntCityPuts()));
 
         assertThat(getCachedCity(1L), is(notNullValue()));
         assertThat(getCachedCity(2L), is(notNullValue()));
@@ -108,6 +114,7 @@ public class CacheTests {
 
         assertThat(getCityHits(), is(sameCityHits()));
         assertThat(getCityMisses(), is(plusOneCityMisses()));
+        assertThat(getCityPuts(), is(plusOntCityPuts()));
 
         City cachedCity = getCachedCity(1L);
 
@@ -126,6 +133,8 @@ public class CacheTests {
 
         nativeCityRepository.updateNameCachePut(city, newName);
 
+        assertThat(getCityPuts(), is(plusOntCityPuts()));
+
         cachedCity = getCachedCity(1L);
         assertThat(cachedCity, is(notNullValue()));
         assertThat(cachedCity.getName(), is(newName));
@@ -135,7 +144,7 @@ public class CacheTests {
     public void testCacheEvict() {
         City city = cityRepository.findOne(1L);
         assertThat(getCityMisses(), is(plusOneCityMisses()));
-        assertThat(EhcacheJmxClient.getCityCount(), is("1"));
+        assertThat(getCityPuts(), is(plusOntCityPuts()));
 
         try {
             nativeCityRepository.evictFromCache(city);
@@ -143,14 +152,15 @@ public class CacheTests {
 
         }
 
-        assertThat(EhcacheJmxClient.getCityCount(), is("1"));
+        assertThat(getCachedCity(1L), is(notNullValue()));
+        assertThat(getCityEvictions(), is(sameCityEvictions()));
     }
 
     @Test
     public void testCacheEvictBeforeInvocation() {
         City city = cityRepository.findOne(1L);
         assertThat(getCityMisses(), is(plusOneCityMisses()));
-        assertThat(EhcacheJmxClient.getCityCount(), is("1"));
+        assertThat(getCityPuts(), is(plusOntCityPuts()));
 
         try {
             nativeCityRepository.evictFromCacheBeforeInvocation(city);
@@ -158,7 +168,9 @@ public class CacheTests {
 
         }
 
-        assertThat(EhcacheJmxClient.getCityCount(), is("0"));
+        assertThat(getCachedCity(1L), is(nullValue()));
+        //todo for some reason 0 evictions in JMX even so the value is removed from the cache
+        //assertThat(getCityEvictions(), is(plusOntCityEvictions()));
     }
 
     @Test

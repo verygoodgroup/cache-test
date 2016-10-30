@@ -25,8 +25,13 @@ public class EhcacheJmxClient {
 
         mbsc = jmxc.getMBeanServerConnection();
 
-        cityStatistics = new ObjectName("net.sf.ehcache:type=CacheStatistics,CacheManager=__DEFAULT__,name=city");
-        hotelStatistics = new ObjectName("net.sf.ehcache:type=CacheStatistics,CacheManager=__DEFAULT__,name=hotel");
+        cityStatistics = getObjectName("city");
+        hotelStatistics = getObjectName("hotel");
+    }
+
+    private static ObjectName getObjectName(String cacheName) throws MalformedObjectNameException {
+        String ehcacheXml = EhcacheJmxClient.class.getResource("../ehcache.xml").getPath();
+        return new ObjectName(String.format("javax.cache:type=CacheStatistics,CacheManager=file.%s,Cache=%s", ehcacheXml, cacheName));
     }
 
     public static String getCityHits() {
@@ -47,9 +52,27 @@ public class EhcacheJmxClient {
         return null;
     }
 
-    public static String getCityCount() {
+    public static String getCityRemovals() {
         try {
-            return mbsc.getAttribute(cityStatistics, "ObjectCount").toString();
+            return mbsc.getAttribute(cityStatistics, "CacheRemovals").toString();
+        } catch (MBeanException | AttributeNotFoundException | ReflectionException | InstanceNotFoundException | IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String getCityEvictions() {
+        try {
+            return mbsc.getAttribute(cityStatistics, "CacheEvictions").toString();
+        } catch (MBeanException | AttributeNotFoundException | ReflectionException | InstanceNotFoundException | IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String getCityPuts() {
+        try {
+            return mbsc.getAttribute(cityStatistics, "CachePuts").toString();
         } catch (MBeanException | AttributeNotFoundException | ReflectionException | InstanceNotFoundException | IOException e) {
             e.printStackTrace();
         }

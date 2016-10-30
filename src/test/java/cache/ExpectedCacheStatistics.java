@@ -1,11 +1,11 @@
 package cache;
 
 class ExpectedCacheStatistics {
-    private static int cityCount = 0;
+    private static int cityEvictions = 0;
+    private static int cityPuts = 0;
     private static int cityHits = 0;
     private static int cityMisses = 0;
 
-    private static int hotelCount = 0;
     private static int hotelHits = 0;
     private static int hotelMisses = 0;
 
@@ -25,12 +25,20 @@ class ExpectedCacheStatistics {
         return String.valueOf(cityMisses);
     }
 
-    public static String plusOntCityCount() {
-        return String.valueOf(++cityCount);
+    public static String plusOntCityEvictions() {
+        return String.valueOf(++cityEvictions);
     }
 
-    public static String sameCityCount() {
-        return String.valueOf(cityCount);
+    public static String sameCityEvictions() {
+        return String.valueOf(cityEvictions);
+    }
+
+    public static String plusOntCityPuts() {
+        return String.valueOf(++cityPuts);
+    }
+
+    public static String sameCityPuts() {
+        return String.valueOf(cityPuts);
     }
 
     public static String plusOneHotelHits() {
